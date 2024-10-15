@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0fr9mxs" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.10.0">
+  <bpmn:process id="my-project-process" isExecutable="true">
+    <bpmn:extensionElements />
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0uo4afg</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="EndEvent_0x6ir2l" camunda:asyncBefore="true">
+      <bpmn:incoming>Flow_1yd2bu8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0uo4afg" sourceRef="StartEvent_1" targetRef="DoSomethingBeforeCallActivity" />
+    <bpmn:serviceTask id="DoSomethingBeforeCallActivity" name="Do something before call subprocess first" camunda:asyncBefore="true" camunda:delegateExpression="${doSomethingBeforeCallActivity}">
+      <bpmn:incoming>Flow_0uo4afg</bpmn:incoming>
+      <bpmn:outgoing>Flow_14lf5z8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_14lf5z8" sourceRef="DoSomethingBeforeCallActivity" targetRef="SubProcessCallActivity" />
+    <bpmn:callActivity id="SubProcessCallActivity" name="Call some subprocess fris" camunda:asyncBefore="true" calledElement="test_sub_process">
+      <bpmn:extensionElements>
+        <camunda:in businessKey="#{execution.processBusinessKey}" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_14lf5z8</bpmn:incoming>
+      <bpmn:outgoing>Flow_05ck115</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:serviceTask id="DoSomethingAfterCallActivity" name="Do something after call subprocess first" camunda:asyncBefore="true" camunda:delegateExpression="${doSomethingAfterCallActivity}">
+      <bpmn:incoming>Flow_1f4s7ql</bpmn:incoming>
+      <bpmn:outgoing>Flow_0nb5gvn</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_05ck115" sourceRef="SubProcessCallActivity" targetRef="TimerAfterCallActivity" />
+    <bpmn:sequenceFlow id="Flow_1f4s7ql" sourceRef="TimerAfterCallActivity" targetRef="DoSomethingAfterCallActivity" />
+    <bpmn:intermediateCatchEvent id="TimerAfterCallActivity">
+      <bpmn:incoming>Flow_05ck115</bpmn:incoming>
+      <bpmn:outgoing>Flow_1f4s7ql</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_0ifs513">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:subProcess id="EventSubprocessOnMain" triggeredByEvent="true">
+      <bpmn:serviceTask id="DoSomethingWhenCorrelateMainProcMsg" name="Что-то сделать во время корреляции в подпроцессе" camunda:asyncBefore="true" camunda:delegateExpression="${doSomethingWhenCorrelateMainProcMsg}">
+        <bpmn:incoming>Flow_085rh9r</bpmn:incoming>
+        <bpmn:outgoing>Flow_00gprln</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_085rh9r" sourceRef="AwaitngMainProcessCorrMsg" targetRef="DoSomethingWhenCorrelateMainProcMsg" />
+      <bpmn:endEvent id="EndEventCorrMainProc">
+        <bpmn:incoming>Flow_12hpqpn</bpmn:incoming>
+        <bpmn:messageEventDefinition id="MessageEventDefinition_1iij91z" messageRef="Message_0t66f3k" />
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_00gprln" sourceRef="DoSomethingWhenCorrelateMainProcMsg" targetRef="Event_1ga5k11" />
+      <bpmn:intermediateCatchEvent id="Event_1ga5k11">
+        <bpmn:incoming>Flow_00gprln</bpmn:incoming>
+        <bpmn:outgoing>Flow_12hpqpn</bpmn:outgoing>
+        <bpmn:timerEventDefinition id="TimerEventDefinition_1j6t1k6">
+          <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30S</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:intermediateCatchEvent>
+      <bpmn:sequenceFlow id="Flow_12hpqpn" sourceRef="Event_1ga5k11" targetRef="EndEventCorrMainProc" />
+      <bpmn:startEvent id="AwaitngMainProcessCorrMsg" isInterrupting="false">
+        <bpmn:outgoing>Flow_085rh9r</bpmn:outgoing>
+        <bpmn:messageEventDefinition id="MessageEventDefinition_1o4cadr" messageRef="Message_0t66f3k" />
+      </bpmn:startEvent>
+    </bpmn:subProcess>
+    <bpmn:callActivity id="SubProcessCallActivitySecond" name="Call same subprocess second" camunda:asyncBefore="true" calledElement="test_sub_process">
+      <bpmn:extensionElements>
+        <camunda:in businessKey="#{execution.processBusinessKey}" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0nb5gvn</bpmn:incoming>
+      <bpmn:outgoing>Flow_1yd2bu8</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_1yd2bu8" sourceRef="SubProcessCallActivitySecond" targetRef="EndEvent_0x6ir2l" />
+    <bpmn:sequenceFlow id="Flow_0nb5gvn" sourceRef="DoSomethingAfterCallActivity" targetRef="SubProcessCallActivitySecond" />
+  </bpmn:process>
+  <bpmn:message id="Message_0v5qshb" name="TestMessage" />
+  <bpmn:message id="Message_0t66f3k" name="MainProcessTestCorrelationMsg" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="my-project-process">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0tghyk1_di" bpmnElement="DoSomethingBeforeCallActivity">
+        <dc:Bounds x="250" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0tad8oh_di" bpmnElement="SubProcessCallActivity">
+        <dc:Bounds x="420" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_083s0qf_di" bpmnElement="DoSomethingAfterCallActivity">
+        <dc:Bounds x="710" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0lx7rih_di" bpmnElement="TimerAfterCallActivity">
+        <dc:Bounds x="592" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_138qmk5" bpmnElement="SubProcessCallActivitySecond">
+        <dc:Bounds x="950" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0x6ir2l_di" bpmnElement="EndEvent_0x6ir2l">
+        <dc:Bounds x="1212" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fghfc2_di" bpmnElement="EventSubprocessOnMain" isExpanded="true">
+        <dc:Bounds x="400" y="250" width="690" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0n826vx_di" bpmnElement="DoSomethingWhenCorrelateMainProcMsg">
+        <dc:Bounds x="530" y="310" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0k70y5x_di" bpmnElement="EndEventCorrMainProc">
+        <dc:Bounds x="822" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_01wun3b_di" bpmnElement="Event_1ga5k11">
+        <dc:Bounds x="682" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1otjcuk_di" bpmnElement="AwaitngMainProcessCorrMsg">
+        <dc:Bounds x="442" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_085rh9r_di" bpmnElement="Flow_085rh9r">
+        <di:waypoint x="478" y="350" />
+        <di:waypoint x="530" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00gprln_di" bpmnElement="Flow_00gprln">
+        <di:waypoint x="630" y="350" />
+        <di:waypoint x="682" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12hpqpn_di" bpmnElement="Flow_12hpqpn">
+        <di:waypoint x="718" y="350" />
+        <di:waypoint x="822" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0uo4afg_di" bpmnElement="Flow_0uo4afg">
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="250" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14lf5z8_di" bpmnElement="Flow_14lf5z8">
+        <di:waypoint x="350" y="117" />
+        <di:waypoint x="420" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05ck115_di" bpmnElement="Flow_05ck115">
+        <di:waypoint x="520" y="117" />
+        <di:waypoint x="592" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1f4s7ql_di" bpmnElement="Flow_1f4s7ql">
+        <di:waypoint x="628" y="117" />
+        <di:waypoint x="710" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1yd2bu8_di" bpmnElement="Flow_1yd2bu8">
+        <di:waypoint x="1050" y="117" />
+        <di:waypoint x="1212" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0nb5gvn_di" bpmnElement="Flow_0nb5gvn">
+        <di:waypoint x="810" y="117" />
+        <di:waypoint x="895" y="117" />
+        <di:waypoint x="895" y="120" />
+        <di:waypoint x="950" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
