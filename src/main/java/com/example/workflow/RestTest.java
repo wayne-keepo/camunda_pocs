@@ -1,8 +1,8 @@
 package com.example.workflow;
 
-import com.example.workflow.service.CamundaProcessingService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.RuntimeService;
@@ -12,8 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.example.workflow.Constants.*;
@@ -25,52 +25,26 @@ public class RestTest {
     @Autowired
     private RuntimeService runtimeService;
 
-    @Autowired
-    private CamundaProcessingService processingService;
-
     @PostMapping
     public ResponseEntity<ProcessInstanceInfo> runProcess(@RequestBody StartProcessMsg msg) {
 
-        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey(PROCESS_NAME, msg.getId());
+        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey(
+                msg.getProcessDefenitionName(), msg.getBusinessKey()
+        );
 
-        var pii = new ProcessInstanceInfo(processInstance.getProcessDefinitionId(), processInstance.getProcessInstanceId(), processInstance.getBusinessKey(), null);
+        var pii = new ProcessInstanceInfo(
+                processInstance.getProcessDefinitionId(),
+                processInstance.getProcessInstanceId(),
+                processInstance.getBusinessKey(),
+                null
+        );
 
         return new ResponseEntity<ProcessInstanceInfo>(pii, HttpStatus.CREATED);
     }
 
-    @GetMapping(value = "correlate/{businessKey}")
-    public HttpStatus recievMessage(@PathVariable String businessKey) {
-        try {
-            initMdc(businessKey);
-            log.info("start correlate message by {}", businessKey);
-            List<ProcessInstance> processInstances = runtimeService
-                    .createProcessInstanceQuery()
-                    .processDefinitionKey(PROCESS_NAME)
-                    .processInstanceBusinessKey(businessKey)
-                    .active()
-                    .list();
-            log.info("active instances:\n{}", processInstances);
-//            Execution execution = runtimeService.createExecutionQuery()
-//                    .processInstanceBusinessKey(businessKey)
-//                    .list().get(0);
-//
-//            Map<String, Object> variables = runtimeService.getVariables(execution.getId());
-//
-//            if ((Boolean) variables.getOrDefault("timeout", false)) return HttpStatus.ACCEPTED;
-
-            runtimeService
-                    .createMessageCorrelation(CORRELATE_MSG)
-                    .correlate();
-
-            return HttpStatus.OK;
-        } finally {
-            clearMdc();
-        }
-    }
-
     @GetMapping(value = "info/{businessKey}")
     public List<ProcessInstanceInfo> getInfoByBusinessKey(@PathVariable String businessKey) {
-        var list = processingService.runtimeService()
+        var list = runtimeService
                 .createProcessInstanceQuery()
                 .processInstanceBusinessKey(businessKey)
                 .active()
@@ -80,9 +54,29 @@ public class RestTest {
 
     }
 
+    @GetMapping(value = "correlate/{msg}")
+    public HttpStatus correlate(@PathVariable String msg) {
+
+        runtimeService.correlateMessage(msg);
+
+        return HttpStatus.OK;
+    }
+
+    @PostMapping(value = "correlate")
+    public HttpStatus correlate(@RequestBody CorrelationInfo correlationInfo) {
+
+        runtimeService
+                .createMessageCorrelation(correlationInfo.message)
+                .processInstanceBusinessKey(correlationInfo.businessKey)
+                .setVariables(correlationInfo.variables)
+                .correlate();
+
+        return HttpStatus.OK;
+    }
+
     @GetMapping(value = "correlate/choice/{businessKey}")
     public HttpStatus correlateWithChoiceByBusinessKey(@PathVariable String businessKey) {
-        List<ProcessInstance> activeProcessInstances = processingService.runtimeService()
+        List<ProcessInstance> activeProcessInstances = runtimeService
                 .createProcessInstanceQuery()
                 .processInstanceBusinessKey(businessKey)
                 .active().list();
@@ -94,8 +88,7 @@ public class RestTest {
                 .ifPresentOrElse(
                         sp -> {
                             log.info("Found subProcess: " + sp.getProcessDefinitionId() + " that called from root: " + sp.getRootProcessInstanceId());
-                            processingService
-                                    .runtimeService()
+                            runtimeService
                                     .createMessageCorrelation(SubProcessTestCorrelationMsg)
                                     .correlate();
                         },
@@ -107,8 +100,7 @@ public class RestTest {
                                     .ifPresent(
                                             pi -> {
                                                 log.info("Not found subProcess, will correlate into main process: " + pi.getId());
-                                                processingService
-                                                        .runtimeService()
+                                                runtimeService
                                                         .createMessageCorrelation(MainProcessTestCorrelationMsg)
                                                         .correlate();
                                             }
@@ -120,18 +112,30 @@ public class RestTest {
     }
 
 
-    @RequiredArgsConstructor
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     static class StartProcessMsg {
-        private String id;
+        private String processDefenitionName;
+        private String businessKey;
     }
 
     @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     static class ProcessInstanceInfo {
         private String name;
         private String id;
         private String businessKey;
         private String rootProcessInstId;
+    }
+
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Data
+    static class CorrelationInfo {
+        private String businessKey;
+        private String message;
+        private Map<String, Object> variables;
     }
 }

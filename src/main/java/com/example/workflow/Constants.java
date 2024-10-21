@@ -11,6 +11,8 @@ public class Constants {
     
     public static final String SubProcessTestCorrelationMsg = "SubProcessTestCorrelationMsg";
 
+    public static final String ThrowingNonInterTimeoutWhileAwaitingMsg = "ThrowingNonInterTimeoutWhileAwaitingMsg";
+
     public static void initMdc(String businessKey) {
         MDC.put("BUSINESS_KEY", businessKey);
     }

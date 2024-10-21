@@ -12,6 +12,7 @@ camunda:
       enabled-for-custom-code: false
       authorization-check-revokes: false
       tenant-check-enabled: false
+    default-number-of-retries: 1
 
 
 logging:
