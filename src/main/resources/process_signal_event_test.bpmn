@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0zkcmqx" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.10.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.19.0">
+  <bpmn:process id="PROCESS_SIGNAL_EVENT_TEST" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0h0mwbz</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0h0mwbz" sourceRef="StartEvent_1" targetRef="EventSignalSubprocessTest" />
+    <bpmn:sequenceFlow id="Flow_0jq05dk" sourceRef="EventSignalSubprocessTest" targetRef="EndEvent_1" />
+    <bpmn:callActivity id="EventSignalSubprocessTest" name="Subprocess Evenet Signal Test" camunda:asyncBefore="true" calledElement="EVENT_SIGNAL_SUBPROCESS_TEST">
+      <bpmn:extensionElements>
+        <camunda:in businessKey="#{execution.processBusinessKey}" />
+        <camunda:in source="isNegotiationTermsConfirmed" target="isNegotiationTermsConfirmed" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0h0mwbz</bpmn:incoming>
+      <bpmn:outgoing>Flow_0jq05dk</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:endEvent id="EndEvent_1">
+      <bpmn:incoming>Flow_0jq05dk</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="Activity_1tghpel" triggeredByEvent="true">
+      <bpmn:sequenceFlow id="Flow_0meb9j4" sourceRef="Event_147hbf5" targetRef="UpdContextVar" />
+      <bpmn:endEvent id="Event_1md9qba">
+        <bpmn:incoming>Flow_0bg3s4k</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_0bg3s4k" sourceRef="UpdContextVar" targetRef="Event_1md9qba" />
+      <bpmn:serviceTask id="UpdContextVar" name="Upd context var" camunda:asyncBefore="true" camunda:delegateExpression="${updContextVarDelegate}">
+        <bpmn:incoming>Flow_0meb9j4</bpmn:incoming>
+        <bpmn:outgoing>Flow_0bg3s4k</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:startEvent id="Event_147hbf5" isInterrupting="false">
+        <bpmn:outgoing>Flow_0meb9j4</bpmn:outgoing>
+        <bpmn:signalEventDefinition id="SignalEventDefinition_09z109m" signalRef="Signal_2gnson5" />
+      </bpmn:startEvent>
+    </bpmn:subProcess>
+  </bpmn:process>
+  <bpmn:signal id="Signal_2gnson5" name="MultiProcessSignalEvent-${execution.processBusinessKey}" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="PROCESS_SIGNAL_EVENT_TEST">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="192" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0hoa60p_di" bpmnElement="EventSignalSubprocessTest">
+        <dc:Bounds x="280" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_08dngqs_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="432" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1yy29q5_di" bpmnElement="Activity_1tghpel" isExpanded="true">
+        <dc:Bounds x="155" y="210" width="350" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1md9qba_di" bpmnElement="Event_1md9qba">
+        <dc:Bounds x="452" y="292" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1mqzedz_di" bpmnElement="UpdContextVar">
+        <dc:Bounds x="290" y="270" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0oswsfe_di" bpmnElement="Event_147hbf5">
+        <dc:Bounds x="195" y="292" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0bg3s4k_di" bpmnElement="Flow_0bg3s4k">
+        <di:waypoint x="390" y="310" />
+        <di:waypoint x="452" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0meb9j4_di" bpmnElement="Flow_0meb9j4">
+        <di:waypoint x="231" y="310" />
+        <di:waypoint x="290" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0h0mwbz_di" bpmnElement="Flow_0h0mwbz">
+        <di:waypoint x="228" y="120" />
+        <di:waypoint x="280" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jq05dk_di" bpmnElement="Flow_0jq05dk">
+        <di:waypoint x="380" y="120" />
+        <di:waypoint x="432" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -95,7 +96,7 @@ public class RestTest {
                         () -> {
                             activeProcessInstances
                                     .stream()
-                                    .filter((ProcessInstance pi) -> pi.getId() == pi.getRootProcessInstanceId())
+                                    .filter((ProcessInstance pi) -> pi.getId().equals(pi.getRootProcessInstanceId()))
                                     .findFirst()
                                     .ifPresent(
                                             pi -> {
@@ -111,6 +112,16 @@ public class RestTest {
         return HttpStatus.ACCEPTED;
     }
 
+    @PostMapping(value = "throw-signal")
+    public HttpStatus signal(@RequestBody SignalInfo signalInfo) {
+        var msg = MULTI_PROCESSING_SIGNAL_EVENT + "-" + signalInfo.businessKey;
+        var vars = new HashMap<String, Object>();
+        vars.put(IS_NEGOTIATION_TERMS_CONFIRMED, true);
+        runtimeService.createSignalEvent(msg)
+                .setVariables(vars)
+                .send();
+        return HttpStatus.ACCEPTED;
+    }
 
     @AllArgsConstructor
     @NoArgsConstructor
@@ -137,5 +148,12 @@ public class RestTest {
         private String businessKey;
         private String message;
         private Map<String, Object> variables;
+    }
+
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Data
+    static class SignalInfo {
+        private String businessKey;
     }
 }
